@@ -1,0 +1,2 @@
+model_checkpoint_path: "/home/liyue/RLnet_Yicong2021//train/model_rl/model.ckpt"
+all_model_checkpoint_paths: "/home/liyue/RLnet_Yicong2021//train/model_rl/model.ckpt"
