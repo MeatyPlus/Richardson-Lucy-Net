@@ -1,14 +1,17 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Sun Apr 22 11:57:35 2020
+Created on Sun Apr 22 11:57:35 2018
 
 @author: lee
 """
 
+# A script to load images and make batch.
+
 import os
 import tensorflow as tf
 import numpy as np
+#import matplotlib.pyplot as plt
 import random
 import tifffile as tiff
 
@@ -16,29 +19,25 @@ FLAGS = tf.app.flags.FLAGS
 batch_index = 0
 indexi=0
 filenames = []
+input_folder='input/'
+ground_truth_folder='ground_truth/'
 
-
-def get_filenames(data_dir,data_set):
+def get_filenames(data_dir,data_set): #获取文件名称
     global filenames
-    labels = []
-    
-    with open(data_dir +data_set + '/labels.txt') as f: 
-        for line in f:
-            inner_list = [elt.strip() for elt in line.split(' ')] 
-            labels += inner_list  
-            
-        for i, label in enumerate(labels):
-            filenames.append([label, i])
-            
-    random.shuffle(filenames) 
+    filetype='.tif'
+    for root, dirs, files in os.walk(os.path.join(data_dir,data_set,input_folder)):
+        for file in files:
+            if file.endswith(filetype):
+                filenames.append(file)
+    random.shuffle(filenames) #打乱数组中的顺序
 
 def random_crop_64(x,y):
-    w=max(0,(x.shape[0]-64)//7)
-    h=max(0,(x.shape[1]-64)//7)
-    d=max(0,(x.shape[2]-64)//7)
-    x1=random.randint(0,w)*7#-64) #新的起始坐标
-    y1=random.randint(0,h)*7#h-64)
-    z1=random.randint(0,d)*7
+    w=max(0,(x.shape[0]-64)//8)
+    h=max(0,(x.shape[1]-64)//8)
+    d=max(0,(x.shape[2]-64)//8)
+    x1=random.randint(0,max(0,w-1))*8#-64) #新的起始坐标
+    y1=random.randint(0,max(0,h-1))*8#h-64)
+    z1=random.randint(0,max(0,d-1))*8
     x2=x1+64 #新的结尾坐标
     y2=y1+64
     z2=z1+64
@@ -53,6 +52,14 @@ def random_crop_64(x,y):
         z2=x.shape[2]-1
     r_x=x[x1:x2,y1:y2,z1:z2]
     r_y=y[x1:x2,y1:y2,z1:z2]
+    return r_x,r_y
+
+def random_crop_width(x,y):
+    h=max(0,(x.shape[1]-40)//5)
+    y1=random.randint(0,h)*5#*8#h-64)
+    y2=y1+40
+    r_x=x[:,y1:y2,:]
+    r_y=y[:,y1:y2,:]
     return r_x,r_y
 
 def random_crop_32(x,y):
@@ -84,34 +91,41 @@ def random_crop_16(x,y):
     return r_x,r_y
     
 def normalize_mi_ma(s,mi,ma,eps=1e-20,dtype=np.float32):
-    x=(s-mi)/(ma-mi+eps)
+    if ma==0:
+        x=s
+    elif ma<mi:
+        x=s/ma
+    else:
+        x=(s-mi)/(ma-mi+eps)
     return x
 
 def normalize(x,pmin=0.0,pmax=99.6,axis=None,eps=1e-20,dtype=np.float32):
     mi=np.percentile(x,pmin,axis=axis,keepdims=True)
-#    print(mi)
     ma=np.percentile(x,pmax,axis=axis,keepdims=True)
-#    print(ma)
+    mean_v=x.mean()
+    while(pmin> 0.0 and ma-mi<0.05*mean_v):
+        mi=np.percentile(x,0.05,axis=axis,keepdims=True)
     return normalize_mi_ma(x,mi,ma,eps=eps,dtype=dtype)
 
 def data_aug_online(x,y,a,is_training):
-    mean_whole=x.mean()#np.percentile(x,99.0,axis=None,keepdims=True)#x.max()
+    mean_whole=y.mean()#np.percentile(x,99.0,axis=None,keepdims=True)#x.mean()
     if is_training:
 #        a=random.randint(0,1)
         if a==0 or a==1:
             x1,y1=random_crop_64(x,y)
-            while (x1.mean()<mean_whole*1):
+            while (y1.mean()<mean_whole*0.8):#LAST1.3
                 x1,y1=random_crop_64(x,y)
 #                print(1)
         else:
             x1,y1=x,y
     return x1,y1
 
+##我的输入和真值在不同文件夹下同名，也可以不同名，但是打乱顺序以后需要进行相同的排序
 
-def get_data_tiff(data_dir, data_set, batch_size,is_training=False):
+def get_data_tiff(data_dir, data_set, batch_size,pmin,pmax,is_training=False,):
     global batch_index, filenames,maxl,indexi
 
-    if len(filenames) == 0: get_filenames(data_dir, data_set)  #读取数据列表
+    if len(filenames) == 0: get_filenames(data_dir,data_set)  #读取数据列表
     maxl = len(filenames)                          #得到file长度
 
     begin = 0                      #判断每一个batch的范围
@@ -123,27 +137,25 @@ def get_data_tiff(data_dir, data_set, batch_size,is_training=False):
     label_out=[]
     
     a=random.randint(0,1)
+        
+    Input_Path = data_dir + data_set + '/'+input_folder + filenames[indexi]  #读取filenames中第i个数组的第一个元素
+    GroundTruth_Path = data_dir + data_set + '/'+ground_truth_folder+'0_'+filenames[indexi]
+    label_out.append(filenames[indexi])
 
-        
-    Input_Path = data_dir + data_set + '/input'+'/' + filenames[indexi][0]  #读取filenames中第i个数组的第一个元素
-    GroundTruth_Path = data_dir + data_set + '/ground_truth'+'/' + filenames[indexi][0]
-    label_out.append(filenames[indexi][0])
-        
-    input_tif1=tiff.imread(Input_Path) 
+#    print(filenames[indexi][0])        
+    input_tif1=tiff.imread(Input_Path) #利用tifffile读取tiff文件，[depth,height,width],所以需要考虑是不是需要调整一下顺序
     input_GT1=tiff.imread(GroundTruth_Path)
+
 
     for j in range(begin,end):
         input_tif,input_GT=data_aug_online(input_tif1,input_GT1,a,is_training)
 
         gtmin, gtmax,gtmean = input_GT.min(), input_GT.max(),input_GT.mean()
-
-        normal_input_tif=normalize(input_tif,0.0,100)#last100
-        normal_gt_tif=np.maximum(0,normalize(input_GT,1.0,99.9))
+        normal_input_tif=normalize(input_tif,pmin,pmax)#last100
+        normal_gt_tif=np.maximum(0,normalize(input_GT,0.01,99.8))#pmin,pmax))#ER 1.0,99.5
         [d,h,w]=normal_input_tif.shape
-#        print(d,w,h)
         x_data = np.append(x_data, normal_input_tif) #将输入保存到数组中
         y_data = np.append(y_data, normal_gt_tif) #将真值保存在数组中
-#        print(x_data.shape)
 
     if indexi+1>=maxl:
         indexi=0
