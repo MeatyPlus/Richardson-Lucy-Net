@@ -60,7 +60,7 @@ Before you train a RLN model, we reconmmend you to create the folders as follow:
             --labels.txt
 
 
-We put the RLN code in the (./RLN_data). There are configuration for single-input RLN and dual-input RLN. 
+We put the RLN code in the (RLN code). There are configuration for single-input RLN and dual-input RLN. 
 
 makedata3D_train_single.py and makedata3D_train_dual.py are the data loading and preprocessing files for single-input and dual-input training respectively.
 makedata3D_test_single.py and makedata3D_test_dual.py are the data loading and preprocessing files for single-input and dual-input testing respectively.
