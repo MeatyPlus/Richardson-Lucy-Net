@@ -79,6 +79,10 @@ test_iter_num=testing_data_numbers
 train_batch_size=as you want
 test_batch_size=1
 
+crop_data_size=365  is the maximum data size for cropping and stitching.
+normal_pmin=0.01   is the minimum percentage for normalize
+normal_pmax=99.9   is the maximum percentage for normalize
+
 and you can set the learning rate in:
 self.learning_rate = tf.train.exponential_decay(0.02,self.global_step,1000,0.9,staircase=False)
 
@@ -94,6 +98,17 @@ For 200 epochs with 100 iteration/epoch, it cost 2-3 hours to train the model.
 ## Model Apply
 
 During testing, put testing dataset into the input folder and list the testing data name into the labels.txt. The output_rl model is used to save the test result. If you have ground truth, you can try validation to metric the difference between the output and ground truth.
+
+You need to set the following parameters:
+mode
+model_path
+test_output
+test_iter_num=testing_data_numbers
+normal_pmin=0.01   is the minimum percentage for normalize
+normal_pmax=99.9   is the maximum percentage for normalize
+
+After you setting these parameters, you can run: python RLN-single.py or python RLN-dual.py
+
 
 ## License
 
