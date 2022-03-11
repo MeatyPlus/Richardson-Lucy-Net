@@ -1,6 +1,5 @@
 # A deeplearning network based on Richardson-Lucy formula (Richardson-Lucy network, RLN)
 
-[![License: CC BY-NC 4.0](https://img.shields.io/badge/License-CC%20BY--NC%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by-nc/4.0/)
 
 RLN is the companion code to our paper:
 
@@ -110,8 +109,3 @@ normal_pmax=99.9   is the maximum percentage for normalize
 After you setting these parameters, you can run: python RLN-single.py or python RLN-dual.py
 
 
-## License
-
-Copyright © 2021 [SVision Technologies LLC.](https://www.aivia-software.com/)
-
-Released under Creative Commons Attribution-NonCommercial 4.0 International Public License ([CC BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0/))
