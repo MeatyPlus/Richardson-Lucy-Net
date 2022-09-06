@@ -1,8 +1,8 @@
 ﻿#5#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Thu Apr 19 17:10:32 2018
-
+Created on Mon Sep 6 17:10:32 2022
+The dual-input is averaged before input the network, used for PSF-invariant case
 @author: lee
 with batch normalization
 """
