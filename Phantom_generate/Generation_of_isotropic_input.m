@@ -1,3 +1,6 @@
+%%  the corresponding PSF can be isotropic (the lateral and axial stepsize should be the same)
+%%  the corresponding testing data should be interpolation to isotropic
+
 clear all;
 
 % ground truth path
