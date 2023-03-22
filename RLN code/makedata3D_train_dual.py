@@ -21,7 +21,7 @@ indexi=0
 filenames = []
 
 # user selection
-data_dir = '/home/liyue/newdata1/'
+#data_dir = '/home/liyue/newdata1/'
 
 def get_filenames(data_dir,data_set):
     global filenames
@@ -41,9 +41,9 @@ def random_crop_64(x,x_1,y):
     w=max(0,(x.shape[0]-64)//8)
     h=max(0,(x.shape[1]-64)//8)
     d=max(0,(x.shape[2]-64)//8)
-    x1=random.randint(1,w-1)*8#-1)*8#-64) #新的起始坐标
-    y1=random.randint(1,h-1)*8#*8#h-64)
-    z1=random.randint(1,d-1)*8#d-64)
+    x1=random.randint(0,max(0,w-1))*8#-64) #新的起始坐标
+    y1=random.randint(0,max(0,h-1))*8#h-64)
+    z1=random.randint(0,max(0,d-1))*8
     x2=x1+64 #新的结尾坐标
     y2=y1+64
     z2=z1+64
@@ -131,13 +131,13 @@ def get_data_tiff(data_dir, data_set, batch_size,is_training=False):
     GroundTruth_Path = data_dir + data_set + '/ground_truth'+'/' + filenames[indexi][0]
     label_out.append(filenames[indexi][0])
         
-    input_tif1=tiff.imread(Input_Path1) #利用tifffile读取tiff文件，[depth,height,width],所以需要考虑是不是需要调整一下顺序
-    input_tif2=tiff.imread(Input_Path2)
-    input_GT=tiff.imread(GroundTruth_Path)
+    input_tif11=tiff.imread(Input_Path1) #利用tifffile读取tiff文件，[depth,height,width],所以需要考虑是不是需要调整一下顺序
+    input_tif21=tiff.imread(Input_Path2)
+    input_GT1=tiff.imread(GroundTruth_Path)
     
     a=random.randint(0,1)
     for i in range(begin, end):
-        input_tif1,input_tif2,input_GT=data_aug_online( input_tif1,input_tif2,input_GT,a,is_training)
+        input_tif1,input_tif2,input_GT=data_aug_online(input_tif11,input_tif21,input_GT1,a,is_training)
 
         gtmin, gtmax,gtmean = input_GT.min(), input_GT.max(),input_GT.mean()
 
@@ -199,7 +199,8 @@ def get_data_tiff_VL(data_dir, data_set, batch_size,is_training=False):
         normal_input_tif2=normalize(input_tif2,0.0,99.9)
         normal_gt_tif=np.maximum(0,normalize(input_GT,1.0,99.9))
         [d,h,w]=normal_input_tif1.shape
-#        print(d,w,h)
+
+        #print(d,w,h)
         x_data1 = np.append(x_data1, normal_input_tif1) #将输入保存到数组中
         x_data2 = np.append(x_data2, normal_input_tif2) #将输入保存到数组中
         y_data = np.append(y_data, normal_gt_tif) #将真值保存在数组中
